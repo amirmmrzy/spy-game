@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Spy Game | بازی جاسوس</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:Tahoma,'Segoe UI',sans-serif;-webkit-tap-highlight-color:transparent;user-select:none}
+        html,body{width:100%;height:100%;overflow:hidden;background:#0a0a0a}
+        .phone{width:100%;max-width:430px;height:100%;margin:0 auto;position:relative;overflow:hidden;background:var(--bg);transition:background .4s}
+        :root,.theme-night{--bg:#0d0d0d;--card:rgba(255,255,255,.05);--border:rgba(255,50,50,.18);--text:#fff;--muted:#999;--accent:#ff1744;--accent2:#ff5252;--btn:linear-gradient(135deg,#d32f2f,#ff1744);--input-bg:rgba(0,0,0,.45)}
+        .theme-day{--bg:#f5f0eb;--card:#fff;--border:rgba(200,50,50,.25);--text:#1a1a1a;--muted:#555;--accent:#c62828;--accent2:#e53935;--btn:linear-gradient(135deg,#c62828,#e53935);--input-bg:#f0f0f0}
+        #intro{position:absolute;inset:0;background:radial-gradient(circle at center,#e53935 0%,#b71c1c 45%,#3d0000 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;transition:transform .6s cubic-bezier(.4,0,.2,1)}
+        #intro.hide{transform:translateY(-110%)}
+        .intro-title{font-size:4.8rem;font-weight:900;color:#fff;text-shadow:0 0 30px rgba(255,0,0,.8);letter-spacing:4px;animation:glow 2.2s ease-in-out infinite alternate}
+        @keyframes glow{from{text-shadow:0 0 20px rgba(255,50,50,.6)}to{text-shadow:0 0 45px rgba(255,0,0,1),0 0 90px rgba(255,0,0,.35)}}
+        .intro-hint{color:rgba(255,255,255,.9);font-size:1.1rem;margin-top:35px;animation:float 1.8s ease-in-out infinite}
+        @keyframes float{0%,100%{transform:translateY(0);opacity:.7}50%{transform:translateY(-12px);opacity:1}}
+        .start-btn{margin-top:50px;padding:15px 45px;background:#fff;color:#b71c1c;border:none;border-radius:50px;font-size:1.1rem;font-weight:bold;cursor:pointer;box-shadow:0 8px 25px rgba(0,0,0,.4)}
+        #game{position:absolute;inset:0;background:var(--bg);color:var(--text);overflow-y:auto;padding:18px 14px 50px;display:none;transition:background .4s,color .4s}
+        #game.show{display:block}
+        .top-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px;flex-wrap:wrap}
+        .top-btn{padding:7px 12px;border-radius:20px;background:var(--card);border:1px solid var(--border);color:var(--text);font-size:.82rem;cursor:pointer}
+        .header{text-align:center;margin-bottom:16px}
+        .header h1{font-size:1.8rem;color:var(--accent)}
+        .header p{color:var(--muted);font-size:.88rem;margin-top:4px}
+        .box{background:var(--card);border-radius:16px;padding:16px;margin-bottom:14px;border:1px solid var(--border);box-shadow:0 4px 15px rgba(0,0,0,.15)}
+        .box-title{color:var(--accent2);font-weight:bold;margin-bottom:12px;font-size:1.05rem}
+        label{display:block;color:var(--muted);font-size:.88rem;margin:12px 0 5px}
+        input,select{width:100%;padding:12px 13px;border-radius:11px;border:1px solid var(--border);background:var(--input-bg);color:var(--text);font-size:1rem;outline:none}
+        button.main{width:100%;padding:13px;border:none;border-radius:11px;background:var(--btn);color:#fff;font-size:1rem;font-weight:bold;cursor:pointer;margin-top:10px}
+        button.gray{background:#444;color:#fff}
+        button.green{background:linear-gradient(135deg,#2e7d32,#00c853)}
+        button.blue{background:linear-gradient(135deg,#1565c0,#2979ff)}
+        .role-card{background:#111;border-radius:16px;overflow:hidden;margin:16px 0;border:2px solid var(--accent);min-height:280px;display:flex;align-items:center;justify-content:center}
+        .role-card img{width:100%;height:auto;display:block}
+        .role-card .tap{color:var(--muted);font-size:1.15rem;padding:40px;text-align:center}
+        .timer{font-size:2.9rem;text-align:center;color:var(--accent);font-weight:bold;margin:14px 0;letter-spacing:2px}
+        .info{text-align:center;background:rgba(128,128,128,.12);padding:11px;border-radius:11px;margin-bottom:10px;color:var(--muted);font-size:.92rem}
+        .row{display:flex;gap:8px}.row button{flex:1}
+        .vote-list{margin-top:12px;max-height:150px;overflow-y:auto}
+        .vote-item{background:rgba(128,128,128,.1);padding:10px 12px;border-radius:10px;margin-bottom:6px;font-size:.9rem}
+        .result-box{background:rgba(255,23,68,.1);border:1px solid rgba(255,23,68,.3);border-radius:12px;padding:14px;margin-top:12px;text-align:center}
+        .score-board{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+        .score-item{background:rgba(128,128,128,.12);padding:8px 12px;border-radius:10px;font-size:.85rem;flex:1;min-width:40%;text-align:center}
+        .name-list{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+        .name-row{display:flex;gap:8px;align-items:center}
+        .name-row input{flex:1}
+        .name-row span{width:28px;text-align:center;color:var(--muted);font-size:.9rem}
+    </style>
+</head>
+<body>
+<div class="phone theme-night" id="phone">
+    <div id="intro">
+        <div class="intro-title" id="introTitle">جاسوس</div>
+        <div class="intro-hint" id="introHint">بکش بالا یا دکمه را بزن</div>
+        <button class="start-btn" id="introBtn" onclick="enterGame()">ورود به بازی</button>
+    </div>
+    <div id="game">
+        <div class="top-bar">
+            <button class="top-btn" id="langBtn" onclick="toggleLang()">English</button>
+            <button class="top-btn" id="themeBtn" onclick="toggleTheme()">تم روز</button>
+            <button class="top-btn" id="muteBtn" onclick="toggleMute()">قطع صدا</button>
+        </div>
+        <div class="header">
+            <h1 id="gameTitle">بازی جاسوس</h1>
+            <p id="roundText">راند <span id="roundNum">۱</span></p>
+        </div>
+        <!-- Setup -->
+        <div class="box" id="setup">
+            <div class="box-title" id="setupTitle">تنظیمات بازی</div>
+            <label id="lblPlayers">تعداد بازیکنان (۳ تا ۱۲)</label>
+            <input type="number" id="playerCount" value="6" min="3" max="12" onchange="generateNameInputs()">
+            <label id="lblSpies">تعداد جاسوس</label>
+            <input type="number" id="spyCount" value="1" min="1" max="5">
+            <label id="lblNames">اسم بازیکن‌ها</label>
+            <div class="name-list" id="nameList"></div>
+            <label id="lblTopic">موضوع بازی</label>
+            <select id="topic"></select>
+            <label id="lblTime">زمان بازی (دقیقه)</label>
+            <select id="gameTime">
+                <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+                <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+                <option value="7">7</option><option value="8" selected>8</option>
+                <option value="9">9</option><option value="10">10</option>
+            </select>
+            <button class="main" id="btnStartRoles" onclick="startRoles()">شروع توزیع نقش‌ها</button>
+        </div>
+        <!-- Roles -->
+        <div class="box" id="roles" style="display:none">
+            <div class="box-title" id="rolesTitle">توزیع نقش‌ها</div>
+            <div class="info"><span id="playerOf">بازیکن</span> <span id="curPlayer">۱</span> <span id="ofText">از</span> <span id="totalP">۶</span></div>
+            <div class="role-card" id="card" onclick="showRole()">
+                <div class="tap" id="tapText">برای دیدن نقش ضربه بزن</div>
+            </div>
+            <div class="row">
+                <button class="main gray" id="btnNext" onclick="nextPlayer()">بازیکن بعدی</button>
+                <button class="main green" id="btnStart" style="display:none" onclick="startPlay()">شروع بازی</button>
+            </div>
+        </div>
+        <!-- Play -->
+        <div class="box" id="play" style="display:none">
+            <div class="box-title" id="timerTitle">زمان باقی‌مانده</div>
+            <div class="timer" id="timer">08:00</div>
+            <div class="info" id="spyInfo"></div>
+            <div class="info" id="topicInfo"></div>
+            <div class="row">
+                <button class="main" id="btnTimer" onclick="toggleTimer()">شروع تایمر</button>
+                <button class="main gray" id="btnNextRound" onclick="nextRound()">راند بعد</button>
+            </div>
+            <div style="margin-top:18px;border-top:1px solid var(--border);padding-top:14px">
+                <div class="box-title" id="voteTitle">ثبت رای‌ها</div>
+                <label id="lblVoter">چه کسی رای می‌دهد؟</label>
+                <select id="voterSelect"></select>
+                <label id="lblTarget">به چه کسی رای می‌دهد؟</label>
+                <select id="targetSelect"></select>
+                <button class="main blue" id="btnAddVote" onclick="addVote()">ثبت این رای</button>
+                <div class="vote-list" id="voteList"></div>
+                <button class="main green" id="btnResults" onclick="showResults()" style="margin-top:10px">نمایش نتیجه + جاسوس واقعی</button>
+                <div id="resultArea"></div>
+            </div>
+            <div style="margin-top:16px">
+                <div class="box-title" id="scoreTitle">امتیازات</div>
+                <div class="score-board" id="scoreBoard"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<audio id="bgMusic" loop preload="auto">
+    <source src="https://incompetech.com/music/royalty-free/mp3-royaltyfree/Fluffing%20a%20Duck.mp3" type="audio/mpeg">
+</audio>
+<script>
+const i18n = {
+    fa: {
+        introTitle: "جاسوس", introHint: "بکش بالا یا دکمه را بزن", introBtn: "ورود به بازی",
+        langBtn: "English", themeNight: "تم روز", themeDay: "تم شب", mute: "قطع صدا", unmute: "روشن کردن صدا",
+        gameTitle: "بازی جاسوس", roundText: "راند", setupTitle: "تنظیمات بازی",
+        lblPlayers: "تعداد بازیکنان (۳ تا ۱۲)", lblSpies: "تعداد جاسوس", lblNames: "اسم بازیکن‌ها",
+        lblTopic: "موضوع بازی", lblTime: "زمان بازی (دقیقه)", btnStartRoles: "شروع توزیع نقش‌ها",
+        rolesTitle: "توزیع نقش‌ها", playerOf: "بازیکن", ofText: "از", tapText: "برای دیدن نقش ضربه بزن",
+        btnNext: "بازیکن بعدی", btnStart: "شروع بازی", timerTitle: "زمان باقی‌مانده",
+        btnTimer: "شروع تایمر", btnTimerPause: "توقف تایمر", btnTimerResume: "ادامه تایمر", btnTimerEnd: "زمان تمام شد",
+        btnNextRound: "راند بعد", voteTitle: "ثبت رای‌ها", lblVoter: "چه کسی رای می‌دهد؟", lblTarget: "به چه کسی رای می‌دهد؟",
+        btnAddVote: "ثبت این رای", btnResults: "نمایش نتیجه + جاسوس واقعی", scoreTitle: "امتیازات",
+        spy: "جاسوس", citizen: "شهروند", noWord: "کلمه را نمی‌دانی", yourWord: "کلمه شما", yourRole: "نقش شما",
+        oneSpy: "۱ جاسوس در بازی وجود دارد", multiSpy: " جاسوس در بازی وجود دارد", topic: "موضوع: ",
+        noVoteSelf: "نمی‌توانید به خودتان رای بدهید", noVotes: "هنوز رایی ثبت نشده", results: "نتیجه رای‌گیری",
+        realSpy: "جاسوس واقعی:", mostVotes: "بیشترین رای: ", tie: "مساوی!", timeUp: "زمان تمام شد! رای‌گیری کنید",
+        seeRoleFirst: "اول نقش خود را ببین", player: "بازیکن ", citizensWin: "شهروندان برنده شدند! (+۱ امتیاز)", spiesWin: "جاسوس‌ها برنده شدند! (+۱ امتیاز)",
+        spyCountError: "تعداد جاسوس باید کمتر از بازیکنان باشد", playerCountError: "تعداد بازیکنان باید بین ۳ تا ۱۲ باشد"
+    },
+    en: {
+        introTitle: "SPY", introHint: "Swipe up or tap the button", introBtn: "Enter Game",
+        langBtn: "فارسی", themeNight: "Day Theme", themeDay: "Night Theme", mute: "Mute", unmute: "Unmute",
+        gameTitle: "Spy Game", roundText: "Round", setupTitle: "Game Settings",
+        lblPlayers: "Number of Players (3-12)", lblSpies: "Number of Spies", lblNames: "Player Names",
+        lblTopic: "Game Topic", lblTime: "Game Time (minutes)", btnStartRoles: "Start Role Distribution",
+        rolesTitle: "Role Distribution", playerOf: "Player", ofText: "of", tapText: "Tap to see your role",
+        btnNext: "Next Player", btnStart: "Start Game", timerTitle: "Time Remaining",
+        btnTimer: "Start Timer", btnTimerPause: "Pause Timer", btnTimerResume: "Resume Timer", btnTimerEnd: "Time's Up",
+        btnNextRound: "Next Round", voteTitle: "Voting", lblVoter: "Who is voting?", lblTarget: "Who are they voting for?",
+        btnAddVote: "Submit Vote", btnResults: "Show Results + Real Spy", scoreTitle: "Scores",
+        spy: "SPY", citizen: "Citizen", noWord: "You don't know the word", yourWord: "Your Word", yourRole: "Your Role",
+        oneSpy: "There is 1 spy in the game", multiSpy: " spies in the game", topic: "Topic: ",
+        noVoteSelf: "You cannot vote for yourself", noVotes: "No votes yet", results: "Voting Results",
+        realSpy: "Real Spy:", mostVotes: "Most votes: ", tie: "It's a tie!", timeUp: "Time's up! Start voting",
+        seeRoleFirst: "See your role first", player: "Player ", citizensWin: "Citizens win! (+1 point)", spiesWin: "Spies win! (+1 point)",
+        spyCountError: "Number of spies must be less than players", playerCountError: "Players must be between 3 and 12"
+    }
+};
+const topics = {
+    places: {
+        fa: ["فرودگاه","بیمارستان","مدرسه","بانک","ساحل","سینما","هتل","موزه","رستوران","ایستگاه قطار","پایگاه نظامی","دانشگاه","پارک","سوپرمارکت","کشتی","سفارت","استادیوم","کتابخانه","زندان","باشگاه"],
+        en: ["Airport","Hospital","School","Bank","Beach","Cinema","Hotel","Museum","Restaurant","Train Station","Military Base","University","Park","Supermarket","Ship","Embassy","Stadium","Library","Prison","Gym"]
+    },
+    jobs: {
+        fa: ["پزشک","معلم","پلیس","آشپز","خلبان","مهندس","وکیل","آتش‌نشان","عکاس","راننده","پرستار","برنامه‌نویس","معمار","خبرنگار","کشاورز","موسیقیدان","بازیگر","معدن‌چی","غواص","فضانورد"],
+        en: ["Doctor","Teacher","Police","Chef","Pilot","Engineer","Lawyer","Firefighter","Photographer","Driver","Nurse","Programmer","Architect","Journalist","Farmer","Musician","Actor","Miner","Diver","Astronaut"]
+    },
+    foods: {
+        fa: ["پیتزا","برگر","sushi","کباب","قورمه سبزی","چای","قهوه","بستنی","سالاد","ساندویچ","ماکارونی","سوپ","کیک","نان","آبمیوه","شکلات","عدسی","جوجه","ماهی","دوغ"],
+        en: ["Pizza","Burger","Sushi","Kebab","Stew","Tea","Coffee","Ice Cream","Salad","Sandwich","Pasta","Soup","Cake","Bread","Juice","Chocolate","Lentils","Chicken","Fish","Yogurt Drink"]
+    },
+    animals: {
+        fa: ["شیر","ببر","فیل","زرافه","خرس","گرگ","روباه","عقاب","کوسه","دلفین","پاندا","کرگدن","گورخر","میمون","مار","تمساح","پنگوئن","اسب","گربه","سگ"],
+        en: ["Lion","Tiger","Elephant","Giraffe","Bear","Wolf","Fox","Eagle","Shark","Dolphin","Panda","Rhino","Zebra","Monkey","Snake","Crocodile","Penguin","Horse","Cat","Dog"]
+    },
+    movies: {
+        fa: ["پدرخوانده","اینسپشن","ماتریکس","تایتانیک","جوکر","انتقام‌جویان","بین ستاره‌ای","شرلوک","بازی تاج و تخت","فرندز","هری پاتر","ارباب حلقه‌ها","بتمن","اسپایدرمن","آواتار"],
+        en: ["The Godfather","Inception","The Matrix","Titanic","Joker","Avengers","Interstellar","Sherlock","Game of Thrones","Friends","Harry Potter","Lord of the Rings","Batman","Spider-Man","Avatar"]
+    },
+    sports: {
+        fa: ["فوتبال","بسکتبال","والیبال","تنیس","شنا","کشتی","بوکس","بدمینتون","گلف","اسکی","ورزش رزمی","دوچرخه‌سواری","هندبال","هاکی","رگبی"],
+        en: ["Football","Basketball","Volleyball","Tennis","Swimming","Wrestling","Boxing","Badminton","Golf","Skiing","Martial Arts","Cycling","Handball","Hockey","Rugby"]
+    },
+    objects: {
+        fa: ["صندلی","میز","گوشی","لپ‌تاپ","کلید","ساعت","عینک","کتاب","چراغ","کیف","خودکار","آینه","بالش","پتو","چتر","بطری","قاشق","چاقو","فرش"],
+        en: ["Chair","Table","Phone","Laptop","Key","Watch","Glasses","Book","Lamp","Bag","Pen","Mirror","Pillow","Blanket","Umbrella","Bottle","Spoon","Knife","Carpet"]
+    },
+    countries: {
+        fa: ["ایران","آمریکا","ژاپن","آلمان","فرانسه","ایتالیا","برزیل","استرالیا","کانادا","چین","هند","ترکیه","اسپانیا","روسیه","مصر","مکزیک","کره جنوبی","انگلیس","سوئد","آرژانتین"],
+        en: ["Iran","USA","Japan","Germany","France","Italy","Brazil","Australia","Canada","China","India","Turkey","Spain","Russia","Egypt","Mexico","South Korea","England","Sweden","Argentina"]
+    }
+};
+const topicNames = {
+    places: {fa:"مکان‌ها", en:"Places"},
+    jobs: {fa:"شغل‌ها", en:"Jobs"},
+    foods: {fa:"غذا و نوشیدنی", en:"Food & Drink"},
+    animals: {fa:"حیوانات", en:"Animals"},
+    movies: {fa:"فیلم و سریال", en:"Movies & Series"},
+    sports: {fa:"ورزش‌ها", en:"Sports"},
+    objects: {fa:"اشیاء", en:"Objects"},
+    countries: {fa:"کشورها", en:"Countries"}
+};
+let lang = 'fa';
+let isNight = true;
+let players = [], current = 0, spies = [], seen = [], secretWord = "", selectedTopic = "places";
+let timeLeft = 0, timerId = null, running = false, votes = [], playerNames = [], scores = {}, round = 1;
+const music = document.getElementById('bgMusic');
+music.volume = 0.5;
+let isMuted = false;
+function t(key) { return i18n[lang][key]; }
+function applyLang() {
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === 'fa' ? 'rtl' : 'ltr';
+    document.getElementById('introTitle').textContent = t('introTitle');
+    document.getElementById('introHint').textContent = t('introHint');
+    document.getElementById('introBtn').textContent = t('introBtn');
+    document.getElementById('langBtn').textContent = t('langBtn');
+    document.getElementById('themeBtn').textContent = isNight ? t('themeNight') : t('themeDay');
+    document.getElementById('muteBtn').textContent = isMuted ? t('unmute') : t('mute');
+    document.getElementById('gameTitle').textContent = t('gameTitle');
+    document.getElementById('roundText').innerHTML = t('roundText') + ' <span id="roundNum">' + round + '</span>';
+    document.getElementById('setupTitle').textContent = t('setupTitle');
+    document.getElementById('lblPlayers').textContent = t('lblPlayers');
+    document.getElementById('lblSpies').textContent = t('lblSpies');
+    document.getElementById('lblNames').textContent = t('lblNames');
+    document.getElementById('lblTopic').textContent = t('lblTopic');
+    document.getElementById('lblTime').textContent = t('lblTime');
+    document.getElementById('btnStartRoles').textContent = t('btnStartRoles');
+    document.getElementById('rolesTitle').textContent = t('rolesTitle');
+    document.getElementById('playerOf').textContent = t('playerOf');
+    document.getElementById('ofText').textContent = t('ofText');
+    document.getElementById('tapText').textContent = t('tapText');
+    document.getElementById('btnNext').textContent = t('btnNext');
+    document.getElementById('btnStart').textContent = t('btnStart');
+    document.getElementById('timerTitle').textContent = t('timerTitle');
+    document.getElementById('btnNextRound').textContent = t('btnNextRound');
+    document.getElementById('voteTitle').textContent = t('voteTitle');
+    document.getElementById('lblVoter').textContent = t('lblVoter');
+    document.getElementById('lblTarget').textContent = t('lblTarget');
+    document.getElementById('btnAddVote').textContent = t('btnAddVote');
+    document.getElementById('btnResults').textContent = t('btnResults');
+    document.getElementById('scoreTitle').textContent = t('scoreTitle');
+    // Topics
+    const topicSel = document.getElementById('topic');
+    const currentVal = topicSel.value || 'places';
+    topicSel.innerHTML = '';
+    for (let key in topicNames) {
+        topicSel.innerHTML += `<option value="${key}">${topicNames[key][lang]}</option>`;
+    }
+    topicSel.value = currentVal;
+    generateNameInputs();
+}
+function toggleLang() {
+    lang = lang === 'fa' ? 'en' : 'fa';
+    applyLang();
+}
+function toggleTheme() {
+    isNight = !isNight;
+    document.getElementById('phone').classList.toggle('theme-night', isNight);
+    document.getElementById('phone').classList.toggle('theme-day', !isNight);
+    document.getElementById('themeBtn').textContent = isNight ? t('themeNight') : t('themeDay');
+}
+function toggleMute() {
+    isMuted = !isMuted;
+    music.muted = isMuted;
+    document.getElementById('muteBtn').textContent = isMuted ? t('unmute') : t('mute');
+}
+function generateNameInputs() {
+    const count = parseInt(document.getElementById('playerCount').value) || 6;
+    const list = document.getElementById('nameList');
+    list.innerHTML = '';
+    for (let i = 1; i <= count; i++) {
+        const defaultName = t('player') + i;
+        list.innerHTML += `<div class="name-row"><span>${i}</span><input type="text" id="name${i}" value="${defaultName}" placeholder="${defaultName}"></div>`;
+    }
+}
+function enterGame() {
+    document.getElementById('intro').classList.add('hide');
+    setTimeout(() => {
+        document.getElementById('intro').style.display = 'none';
+        document.getElementById('game').classList.add('show');
+        music.play().catch(() => {});
+    }, 550);
+}
+let startY = 0;
+document.getElementById('intro').addEventListener('touchstart', e => startY = e.touches[0].clientY, {passive: true});
+document.getElementById('intro').addEventListener('touchend', e => {
+    if (startY - e.changedTouches[0].clientY > 70) enterGame();
+}, {passive: true});
+function startRoles() {
+    const count = parseInt(document.getElementById('playerCount').value) || 6;
+    let spyNum = parseInt(document.getElementById('spyCount').value) || 1;
+    selectedTopic = document.getElementById('topic').value;
+    if (count < 3 || count > 12) { alert(t('playerCountError')); return; }
+    if (spyNum < 1) spyNum = 1;
+    if (spyNum >= count) { alert(t('spyCountError')); return; }
+    playerNames = [];
+    for (let i = 1; i <= count; i++) {
+        const val = document.getElementById('name' + i)?.value.trim() || (t('player') + i);
+        playerNames.push(val);
+        if (scores[val] === undefined) scores[val] = 0;
+    }
+    const words = topics[selectedTopic][lang];
+    secretWord = words[Math.floor(Math.random() * words.length)];
+    spies = [];
+    while (spies.length < spyNum) {
+        const r = Math.floor(Math.random() * count);
+        if (!spies.includes(r)) spies.push(r);
+    }
+    players = []; seen = [];
+    for (let i = 0; i < count; i++) {
+        players.push(spies.includes(i));
+        seen.push(false);
+    }
+    current = 0; votes = [];
+    document.getElementById('setup').style.display = 'none';
+    document.getElementById('roles').style.display = 'block';
+    document.getElementById('play').style.display = 'none';
+    document.getElementById('totalP').textContent = count;
+    document.getElementById('curPlayer').textContent = lang === 'fa' ? '۱' : '1';
+    document.getElementById('btnStart').style.display = 'none';
+    document.getElementById('resultArea').innerHTML = '';
+    document.getElementById('voteList').innerHTML = '';
+    document.getElementById('roundNum').textContent = round;
+    resetCard();
+}
+function resetCard() {
+    const card = document.getElementById('card');
+    card.innerHTML = `<div class="tap">${t('tapText')}</div>`;
+    card.onclick = showRole;
+}
+function showRole() {
+    if (seen[current]) return;
+    const card = document.getElementById('card');
+    card.onclick = null;
+    if (players[current]) {
+        // Spy image
+        card.innerHTML = `<img src="spy.png" alt="Spy" onerror="this.parentElement.innerHTML='<div style=\\'padding:40px;text-align:center;color:#ff1744;font-size:1.8rem;font-weight:bold\\'>${t('spy')}</div>'">`;
+    } else {
+        // Citizen image
+        card.innerHTML = `<img src="citizen.png" alt="Citizen" onerror="this.parentElement.innerHTML='<div style=\\'padding:40px;text-align:center;color:#4caf50;font-size:1.6rem;font-weight:bold\\'>${t('citizen')}<br><small style=\\'font-size:1rem;color:#aaa\\'>${secretWord}</small></div>'">`;
+    }
+    seen[current] = true;
+    if (seen.every(s => s)) document.getElementById('btnStart').style.display = 'block';
+}
+function nextPlayer() {
+    if (!seen[current]) { alert(t('seeRoleFirst')); return; }
+    if (current < players.length - 1) {
+        current++;
+        document.getElementById('curPlayer').textContent = lang === 'fa' ? (current + 1).toLocaleString('fa-IR') : (current + 1);
+        resetCard();
+    } else {
+        document.getElementById('btnStart').style.display = 'block';
+    }
+}
+function startPlay() {
+    document.getElementById('roles').style.display = 'none';
+    document.getElementById('play').style.display = 'block';
+    const num = spies.length;
+    document.getElementById('spyInfo').textContent = num === 1 ? t('oneSpy') : num + t('multiSpy');
+    document.getElementById('topicInfo').textContent = t('topic') + topicNames[selectedTopic][lang];
+    const voterSel = document.getElementById('voterSelect');
+    const targetSel = document.getElementById('targetSelect');
+    voterSel.innerHTML = ''; targetSel.innerHTML = '';
+    playerNames.forEach((n, i) => {
+        voterSel.innerHTML += `<option value="${i}">${n}</option>`;
+        targetSel.innerHTML += `<option value="${i}">${n}</option>`;
+    });
+    const min = parseInt(document.getElementById('gameTime').value) || 8;
+    timeLeft = min * 60;
+    updateTimer();
+    document.getElementById('btnTimer').textContent = t('btnTimer');
+    running = false;
+    if (timerId) clearInterval(timerId);
+    renderScores();
+    if (!isMuted) music.play().catch(() => {});
+}
+function updateTimer() {
+    const m = Math.floor(timeLeft / 60);
+    const s = timeLeft % 60;
+    document.getElementById('timer').textContent = (m < 10 ? '0' + m : m) + ':' + (s < 10 ? '0' + s : s);
+}
+function toggleTimer() {
+    const btn = document.getElementById('btnTimer');
+    if (running) {
+        clearInterval(timerId);
+        running = false;
+        btn.textContent = t('btnTimerResume');
+    } else {
+        running = true;
+        btn.textContent = t('btnTimerPause');
+        timerId = setInterval(() => {
+            timeLeft--;
+            updateTimer();
+            if (timeLeft <= 0) {
+                clearInterval(timerId);
+                running = false;
+                btn.textContent = t('btnTimerEnd');
+                alert(t('timeUp'));
+            }
+        }, 1000);
+    }
+}
+function addVote() {
+    const voter = parseInt(document.getElementById('voterSelect').value);
+    const target = parseInt(document.getElementById('targetSelect').value);
+    if (voter === target) { alert(t('noVoteSelf')); return; }
+    votes = votes.filter(v => v.voter !== voter);
+    votes.push({ voter, target });
+    renderVotes();
+}
+function renderVotes() {
+    const list = document.getElementById('voteList');
+    if (votes.length === 0) {
+        list.innerHTML = `<div style="color:var(--muted);text-align:center;padding:10px">${t('noVotes')}</div>`;
+        return;
+    }
+    list.innerHTML = votes.map(v => `<div class="vote-item">${playerNames[v.voter]} → <strong style="color:var(--accent)">${playerNames[v.target]}</strong></div>`).join('');
+}
+function showResults() {
+    if (votes.length === 0) { alert(t('noVotes')); return; }
+    const countMap = {};
+    playerNames.forEach((_, i) => countMap[i] = 0);
+    votes.forEach(v => countMap[v.target]++);
+    const sorted = Object.keys(countMap).map(k => ({ id: +k, votes: countMap[k] })).sort((a, b) => b.votes - a.votes);
+    const realSpies = spies.map(i => playerNames[i]);
+    let html = `<div class="result-box"><h3 style="color:var(--accent);margin-bottom:10px">${t('results')}</h3>`;
+    sorted.forEach((item, idx) => {
+        if (item.votes > 0) html += `<div style="margin:5px 0">${idx + 1}. ${playerNames[item.id]} → <strong style="color:var(--accent)">${item.votes}</strong></div>`;
+    });
+    html += `<div style="margin-top:16px;padding-top:12px;border-top:1px solid rgba(255,23,68,.3)">
+        <div style="color:#ff8a80;font-weight:bold;margin-bottom:6px">${t('realSpy')}</div>
+        <div style="font-size:1.15rem;color:#ff1744">${realSpies.join(lang === 'fa' ? ' ، ' : ', ')}</div>
+    </div>`;
+    const topVoted = sorted[0];
+    const wasSpyCaught = spies.includes(topVoted.id) && topVoted.votes > 0;
+    if (wasSpyCaught) {
+        playerNames.forEach((n, i) => { if (!players[i]) scores[n] = (scores[n] || 0) + 1; });
+        html += `<div style="margin-top:12px;color:#4caf50">${t('citizensWin')}</div>`;
+    } else {
+        spies.forEach(i => scores[playerNames[i]] = (scores[playerNames[i]] || 0) + 1);
+        html += `<div style="margin-top:12px;color:#ff1744">${t('spiesWin')}</div>`;
+    }
+    html += `</div>`;
+    document.getElementById('resultArea').innerHTML = html;
+    renderScores();
+}
+function renderScores() {
+    const board = document.getElementById('scoreBoard');
+    board.innerHTML = '';
+    playerNames.forEach(n => {
+        board.innerHTML += `<div class="score-item">${n}<br><strong style="color:var(--accent)">${scores[n] || 0}</strong></div>`;
+    });
+}
+function nextRound() {
+    if (timerId) clearInterval(timerId);
+    running = false;
+    round++;
+    document.getElementById('play').style.display = 'none';
+    document.getElementById('roles').style.display = 'none';
+    document.getElementById('setup').style.display = 'block';
+    document.getElementById('resultArea').innerHTML = '';
+    document.getElementById('voteList').innerHTML = '';
+    document.getElementById('roundNum').textContent = round;
+}
+// Init
+applyLang();
+generateNameInputs();
+</script>
+</body>
+</html> از html to apk
